@@ -1,0 +1,67 @@
+echo =>Set processor
+#processor list
+processor pic16f887 mcu
+
+echo =>Load program
+load pic16f887 build/pictest.elf
+processor
+symbol
+
+echo =>Load module libraries
+module library libgpsim_modules
+#echo =>Loaded libraries:
+#module list
+
+echo =>Load modules
+module load usart U1
+module load FileRecorder FR1
+module load FileRecorder FR2
+
+FR1.file = ser_out.txt
+FR2.file = pa0_out.txt
+FR1.digital = true
+FR2.digital = true
+
+echo =>Create nodes
+node ntx nrx npa0 nfile
+node
+
+attach ntx mcu.portc6
+attach ntx U1.RXPIN
+attach nfile U1.rx
+attach nfile FR1.pin
+attach npa0 mcu.porta0 
+attach npa0 FR2.pin
+
+echo =>Create stimulus
+stimulus asynchronous_stimulus
+# The initial state AND the state the stimulus is when
+# it rolls over
+initial_state 0
+start_cycle 0
+# the asynchronous stimulus will roll over in ’period’
+# cycles. Delete this line if you don’t want a roll over.
+period 1000
+{ 100, 1,
+200, 0,
+300, 1,
+400, 0
+}
+# Give the stimulus a name:
+name two_pulse_repeat
+end
+
+echo =>Show stimulus
+two_pulse_repeat
+
+attach nrx mcu.portc7
+attach nrx two_pulse_repeat
+
+stimulus
+
+run
+U1.tx = '1'
+
+processor pins
+
+#quit
